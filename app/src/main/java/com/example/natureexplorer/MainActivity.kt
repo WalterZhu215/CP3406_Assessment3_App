@@ -20,7 +20,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.natureexplorer.ui.theme.NatureExplorerTheme
 
-// 引入拆分出去的页面
+
 import com.example.natureexplorer.ui.screens.*
 
 class MainActivity : ComponentActivity() {

@@ -22,12 +22,11 @@ import com.google.accompanist.permissions.rememberPermissionState
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
 fun ExploreScreen(
-
-    viewModel: ExploreViewModel = viewModel()
+    viewModel: ExploreViewModel = viewModel(),
+    // 新增：点击景点的回调函数，将具体的景点名字传出去
+    onTrailClick: (String) -> Unit
 ) {
-
     val uiState by viewModel.uiState.collectAsState()
-
 
     val locationPermissionState = rememberPermissionState(
         android.Manifest.permission.ACCESS_FINE_LOCATION
@@ -45,7 +44,6 @@ fun ExploreScreen(
             modifier = Modifier.padding(bottom = 16.dp, top = 24.dp)
         )
 
-
         OutlinedTextField(
             value = uiState.searchQuery,
             onValueChange = { viewModel.updateSearchQuery(it) },
@@ -57,7 +55,6 @@ fun ExploreScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-
         if (locationPermissionState.status.isGranted) {
             Text(
                 text = "Nearby Trails (Permission Granted!)",
@@ -66,19 +63,46 @@ fun ExploreScreen(
             )
             Spacer(modifier = Modifier.height(16.dp))
 
-
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 items(uiState.nearbyTrails) { trail ->
-                    Text(
-                        text = "📍 ${trail.name} (${trail.distance})",
-                        style = MaterialTheme.typography.bodyLarge
-                    )
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant
+                        ),
+                        // 触发点击事件，将 trail.name 传给外层（MainActivity）
+                        onClick = { onTrailClick(trail.name) }
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .padding(16.dp)
+                                .fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "📍",
+                                style = MaterialTheme.typography.titleLarge
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(
+                                    text = trail.name,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = trail.distance,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                    }
                 }
             }
         } else {
-
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(

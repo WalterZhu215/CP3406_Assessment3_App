@@ -10,24 +10,23 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-
-
-data class ReviewPlace(val name: String, val rating: String, val review: String)
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.natureexplorer.ui.viewmodels.HomeViewModel
 
 @Composable
-fun HomeScreen() {
+fun HomeScreen(
 
-    val communityReviews = listOf(
-        ReviewPlace("Pine Valley Trail", "4.8", "Great for beginners!"),
-        ReviewPlace("Lake Serenity", "4.9", "Beautiful sunset views."),
-        ReviewPlace("Echo Canyon", "4.5", "A bit rocky, wear good shoes.")
-    )
+    viewModel: HomeViewModel = viewModel()
+) {
+
+    val uiState by viewModel.uiState.collectAsState()
 
     LazyColumn(
         modifier = Modifier
@@ -35,7 +34,7 @@ fun HomeScreen() {
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
-
+        // 1. 欢迎区块 (不变)
         item {
             Column(modifier = Modifier.padding(top = 16.dp)) {
                 Text(
@@ -78,14 +77,15 @@ fun HomeScreen() {
                             .align(Alignment.BottomStart)
                             .padding(16.dp)
                     ) {
+
                         Text(
-                            text = "Redwood National Park",
+                            text = uiState.featuredTitle,
                             style = MaterialTheme.typography.titleLarge,
                             color = MaterialTheme.colorScheme.onTertiaryContainer,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "Discover the ancient giants.",
+                            text = uiState.featuredSubtitle,
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onTertiaryContainer
                         )
@@ -93,6 +93,7 @@ fun HomeScreen() {
                 }
             }
         }
+
 
         item {
             Text(
@@ -104,7 +105,8 @@ fun HomeScreen() {
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                items(communityReviews) { place ->
+                // 遍历 uiState 中的点评列表
+                items(uiState.communityReviews) { place ->
                     Card(
                         modifier = Modifier.width(220.dp),
                         colors = CardDefaults.cardColors(
@@ -124,7 +126,7 @@ fun HomeScreen() {
                                 Icon(
                                     imageVector = Icons.Filled.Star,
                                     contentDescription = "Rating",
-                                    tint = Color(0xFFFFB300), // 简单的金色星星
+                                    tint = Color(0xFFFFB300),
                                     modifier = Modifier.size(16.dp)
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))

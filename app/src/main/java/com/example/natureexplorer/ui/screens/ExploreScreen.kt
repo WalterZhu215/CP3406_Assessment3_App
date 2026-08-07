@@ -1,6 +1,8 @@
 package com.example.natureexplorer.ui.screens
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
@@ -11,14 +13,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.natureexplorer.ui.viewmodels.ExploreViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
-fun ExploreScreen() {
-    var searchQuery by remember { mutableStateOf("") }
+fun ExploreScreen(
+
+    viewModel: ExploreViewModel = viewModel()
+) {
+
+    val uiState by viewModel.uiState.collectAsState()
+
 
     val locationPermissionState = rememberPermissionState(
         android.Manifest.permission.ACCESS_FINE_LOCATION
@@ -36,9 +45,10 @@ fun ExploreScreen() {
             modifier = Modifier.padding(bottom = 16.dp, top = 24.dp)
         )
 
+
         OutlinedTextField(
-            value = searchQuery,
-            onValueChange = { searchQuery = it },
+            value = uiState.searchQuery,
+            onValueChange = { viewModel.updateSearchQuery(it) },
             placeholder = { Text("Search for trails, parks...") },
             leadingIcon = { Icon(Icons.Filled.Search, contentDescription = "Search") },
             modifier = Modifier.fillMaxWidth(),
@@ -47,6 +57,7 @@ fun ExploreScreen() {
 
         Spacer(modifier = Modifier.height(24.dp))
 
+
         if (locationPermissionState.status.isGranted) {
             Text(
                 text = "Nearby Trails (Permission Granted!)",
@@ -54,10 +65,20 @@ fun ExploreScreen() {
                 fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.height(16.dp))
-            Text("📍 Botanical Garden Trail (2.1 km)", style = MaterialTheme.typography.bodyLarge)
-            Spacer(modifier = Modifier.height(8.dp))
-            Text("📍 Sunrise Peak (5.4 km)", style = MaterialTheme.typography.bodyLarge)
+
+
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(uiState.nearbyTrails) { trail ->
+                    Text(
+                        text = "📍 ${trail.name} (${trail.distance})",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                }
+            }
         } else {
+
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(

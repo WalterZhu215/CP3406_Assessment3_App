@@ -1,6 +1,5 @@
 package com.example.natureexplorer.ui.screens
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -11,9 +10,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,21 +43,18 @@ fun DetailScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            // 1. 顶部大图占位 (未来用 Coil 替换成真实图片)
-            Box(
+
+            AsyncImage(
+
+                model = "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=2560&auto=format&fit=crop",
+                contentDescription = "Image of $trailName",
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(250.dp)
-                    .background(MaterialTheme.colorScheme.secondaryContainer)
-            ) {
-                Text(
-                    text = "Image for $trailName",
-                    color = MaterialTheme.colorScheme.onSecondaryContainer,
-                    modifier = Modifier.align(Alignment.Center)
-                )
-            }
+                    .height(250.dp),
+                contentScale = ContentScale.Crop // 保证图片完美裁剪填充区域
+            )
 
-            // 2. 详情内容区
+
             Column(
                 modifier = Modifier.padding(16.dp)
             ) {
@@ -80,7 +77,7 @@ fun DetailScreen(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "Approx. 5 km away", // 模拟数据
+                        text = "Approx. 5 km away",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

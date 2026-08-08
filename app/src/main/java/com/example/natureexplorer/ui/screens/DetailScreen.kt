@@ -3,24 +3,33 @@ package com.example.natureexplorer.ui.screens
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.example.natureexplorer.ui.viewmodels.CollectionViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DetailScreen(
     trailName: String,
     imageUrl: String,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    collectionViewModel: CollectionViewModel // 接收共享数据仓库
 ) {
+    // 监听收藏列表的数据变化
+    val collectionState by collectionViewModel.uiState.collectAsState()
+
+    // 判断当前景点是否在收藏列表中
+    val isFavorite = collectionState.savedTrails.any { it.name == trailName }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -31,8 +40,15 @@ fun DetailScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { /* TODO: 收藏功能 */ }) {
-                        Icon(Icons.Filled.FavoriteBorder, contentDescription = "Save")
+                    // 点击执行收藏/取消收藏
+                    IconButton(onClick = { collectionViewModel.toggleFavorite(trailName, imageUrl) }) {
+                        Icon(
+                            // 动态切换实心和空心爱心图标
+                            imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                            contentDescription = "Save",
+                            // 动态切换颜色（实心为主题色，空心为默认色）
+                            tint = if (isFavorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                        )
                     }
                 }
             )
@@ -43,13 +59,10 @@ fun DetailScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-
             AsyncImage(
                 model = imageUrl,
                 contentDescription = "Image of $trailName",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(250.dp),
+                modifier = Modifier.fillMaxWidth().height(250.dp),
                 contentScale = ContentScale.Crop
             )
 

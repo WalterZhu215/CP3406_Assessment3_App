@@ -12,16 +12,18 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.example.natureexplorer.ui.viewmodels.CollectionViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CollectionScreen(
-    viewModel: CollectionViewModel = viewModel()
+    viewModel: CollectionViewModel // 接收从外部传进来的 ViewModel
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -36,7 +38,6 @@ fun CollectionScreen(
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(bottom = 16.dp, top = 24.dp)
         )
-
 
         if (uiState.savedTrails.isEmpty()) {
             Box(
@@ -53,16 +54,12 @@ fun CollectionScreen(
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-
                 items(
                     items = uiState.savedTrails,
                     key = { trail -> trail.id }
                 ) { trail ->
-
-
                     val dismissState = rememberSwipeToDismissBoxState(
                         confirmValueChange = { dismissValue ->
-
                             if (dismissValue == SwipeToDismissBoxValue.EndToStart) {
                                 viewModel.removeTrail(trail.id)
                                 true
@@ -71,7 +68,6 @@ fun CollectionScreen(
                             }
                         }
                     )
-
 
                     SwipeToDismissBox(
                         state = dismissState,
@@ -98,7 +94,6 @@ fun CollectionScreen(
                             }
                         }
                     ) {
-
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
@@ -108,27 +103,41 @@ fun CollectionScreen(
                         ) {
                             Row(
                                 modifier = Modifier
-                                    .padding(16.dp)
+                                    .padding(12.dp)
                                     .fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Column {
+
+                                AsyncImage(
+                                    model = trail.imageUrl,
+                                    contentDescription = trail.name,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier
+                                        .size(64.dp)
+                                        .clip(RoundedCornerShape(8.dp))
+                                )
+
+                                Spacer(modifier = Modifier.width(16.dp))
+
+                                Column(modifier = Modifier.weight(1f)) {
                                     Text(
                                         text = trail.name,
                                         fontWeight = FontWeight.Bold,
                                         style = MaterialTheme.typography.titleMedium
                                     )
+                                    Spacer(modifier = Modifier.height(4.dp))
                                     Text(
                                         text = trail.addedDate,
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
+
                                 Icon(
                                     imageVector = Icons.Filled.Favorite,
                                     contentDescription = "Favorite",
-                                    tint = MaterialTheme.colorScheme.primary
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.padding(end = 8.dp)
                                 )
                             }
                         }

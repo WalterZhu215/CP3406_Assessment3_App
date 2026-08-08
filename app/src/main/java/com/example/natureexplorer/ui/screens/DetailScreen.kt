@@ -1,6 +1,10 @@
 package com.example.natureexplorer.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
@@ -10,6 +14,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -22,13 +27,13 @@ fun DetailScreen(
     trailName: String,
     imageUrl: String,
     onBackClick: () -> Unit,
-    collectionViewModel: CollectionViewModel // 接收共享数据仓库
+    collectionViewModel: CollectionViewModel
 ) {
-    // 监听收藏列表的数据变化
     val collectionState by collectionViewModel.uiState.collectAsState()
-
-    // 判断当前景点是否在收藏列表中
     val isFavorite = collectionState.savedTrails.any { it.name == trailName }
+
+
+    val scrollState = rememberScrollState()
 
     Scaffold(
         topBar = {
@@ -40,13 +45,10 @@ fun DetailScreen(
                     }
                 },
                 actions = {
-                    // 点击执行收藏/取消收藏
                     IconButton(onClick = { collectionViewModel.toggleFavorite(trailName, imageUrl) }) {
                         Icon(
-                            // 动态切换实心和空心爱心图标
                             imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
                             contentDescription = "Save",
-                            // 动态切换颜色（实心为主题色，空心为默认色）
                             tint = if (isFavorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                         )
                     }
@@ -58,11 +60,14 @@ fun DetailScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                .verticalScroll(scrollState)
         ) {
             AsyncImage(
                 model = imageUrl,
                 contentDescription = "Image of $trailName",
-                modifier = Modifier.fillMaxWidth().height(250.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(250.dp),
                 contentScale = ContentScale.Crop
             )
 
@@ -104,8 +109,54 @@ fun DetailScreen(
                 Text(
                     text = "This is a beautiful natural trail featuring diverse flora and fauna. Perfect for a weekend hike to reconnect with nature. Remember to stay on the designated paths to protect the local ecosystem.",
                     style = MaterialTheme.typography.bodyLarge,
-                    lineHeight = MaterialTheme.typography.bodyLarge.lineHeight * 1.2f
+                    lineHeight = MaterialTheme.typography.bodyLarge.lineHeight * 1.2f,
+                    modifier = Modifier.padding(bottom = 24.dp)
                 )
+
+
+                Text(
+                    text = "Location Map",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.padding(bottom = 12.dp)
+                )
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(220.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                ) {
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(MaterialTheme.colorScheme.secondaryContainer),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(
+                                imageVector = Icons.Filled.LocationOn,
+                                contentDescription = "Map Placeholder",
+                                modifier = Modifier.size(48.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "Interactive Map Ready",
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                            Text(
+                                text = "(Google Maps API Key Required)",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(32.dp))
             }
         }
     }

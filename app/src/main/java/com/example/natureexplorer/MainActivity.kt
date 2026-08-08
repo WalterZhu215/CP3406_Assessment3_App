@@ -11,8 +11,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
@@ -28,6 +27,9 @@ import java.net.URLDecoder
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
+// 定义全局的 CompositionLocal 变量，像空气一样包裹整个 App
+val LocalIsEnglish = compositionLocalOf { true }
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,109 +44,97 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun NatureExplorerApp() {
+    // 真正的语言状态源头在这里！
+    var isEnglish by remember { mutableStateOf(true) }
+
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
-
-
     val sharedCollectionViewModel: CollectionViewModel = viewModel()
-
     val bottomBarDestination = listOf("home", "explore", "collection", "profile").any { it == currentRoute }
 
-    Scaffold(
-        bottomBar = {
-            if (bottomBarDestination) {
-                NavigationBar {
-                    NavigationBarItem(
-                        icon = { Icon(Icons.Filled.Home, contentDescription = "Home") },
-                        label = { Text("Home") },
-                        selected = currentRoute == "home",
-                        onClick = {
-                            navController.navigate("home") {
-                                popUpTo(navController.graph.startDestinationId) { saveState = true }
-                                launchSingleTop = true
-                                restoreState = true
+    // 将全局语言状态注入到这棵 UI 树中
+    CompositionLocalProvider(LocalIsEnglish provides isEnglish) {
+        Scaffold(
+            bottomBar = {
+                if (bottomBarDestination) {
+                    NavigationBar {
+                        NavigationBarItem(
+                            icon = { Icon(Icons.Filled.Home, contentDescription = "Home") },
+                            label = { Text(if (isEnglish) "Home" else "首页") }, // 底部导航栏中英切换
+                            selected = currentRoute == "home",
+                            onClick = {
+                                navController.navigate("home") { popUpTo("home") { saveState = true }; launchSingleTop = true; restoreState = true }
                             }
-                        }
-                    )
-                    NavigationBarItem(
-                        icon = { Icon(Icons.Filled.Place, contentDescription = "Explore") },
-                        label = { Text("Explore") },
-                        selected = currentRoute == "explore",
-                        onClick = {
-                            navController.navigate("explore") {
-                                popUpTo(navController.graph.startDestinationId) { saveState = true }
-                                launchSingleTop = true
-                                restoreState = true
+                        )
+                        NavigationBarItem(
+                            icon = { Icon(Icons.Filled.Place, contentDescription = "Explore") },
+                            label = { Text(if (isEnglish) "Explore" else "探索") },
+                            selected = currentRoute == "explore",
+                            onClick = {
+                                navController.navigate("explore") { popUpTo("home") { saveState = true }; launchSingleTop = true; restoreState = true }
                             }
-                        }
-                    )
-                    NavigationBarItem(
-                        icon = { Icon(Icons.Filled.Favorite, contentDescription = "Collection") },
-                        label = { Text("Collection") },
-                        selected = currentRoute == "collection",
-                        onClick = {
-                            navController.navigate("collection") {
-                                popUpTo(navController.graph.startDestinationId) { saveState = true }
-                                launchSingleTop = true
-                                restoreState = true
+                        )
+                        NavigationBarItem(
+                            icon = { Icon(Icons.Filled.Favorite, contentDescription = "Collection") },
+                            label = { Text(if (isEnglish) "Collection" else "收藏") },
+                            selected = currentRoute == "collection",
+                            onClick = {
+                                navController.navigate("collection") { popUpTo("home") { saveState = true }; launchSingleTop = true; restoreState = true }
                             }
-                        }
-                    )
-                    NavigationBarItem(
-                        icon = { Icon(Icons.Filled.Person, contentDescription = "Profile") },
-                        label = { Text("Profile") },
-                        selected = currentRoute == "profile",
-                        onClick = {
-                            navController.navigate("profile") {
-                                popUpTo(navController.graph.startDestinationId) { saveState = true }
-                                launchSingleTop = true
-                                restoreState = true
+                        )
+                        NavigationBarItem(
+                            icon = { Icon(Icons.Filled.Person, contentDescription = "Profile") },
+                            label = { Text(if (isEnglish) "Profile" else "我的") },
+                            selected = currentRoute == "profile",
+                            onClick = {
+                                navController.navigate("profile") { popUpTo("home") { saveState = true }; launchSingleTop = true; restoreState = true }
                             }
-                        }
-                    )
+                        )
+                    }
                 }
             }
-        }
-    ) { innerPadding ->
-        NavHost(
-            navController = navController,
-            startDestination = "home",
-            modifier = Modifier.padding(innerPadding)
-        ) {
-            composable("home") { HomeScreen() }
-
-            composable("explore") {
-                ExploreScreen(
-                    onTrailClick = { trailName, imageUrl ->
+        ) { innerPadding ->
+            NavHost(
+                navController = navController,
+                startDestination = "home",
+                modifier = Modifier.padding(innerPadding)
+            ) {
+                composable("home") { HomeScreen() }
+                composable("explore") {
+                    ExploreScreen(onTrailClick = { trailName, imageUrl ->
                         val encodedUrl = URLEncoder.encode(imageUrl, StandardCharsets.UTF_8.toString())
                         navController.navigate("detail/$trailName?imageUrl=$encodedUrl")
-                    }
-                )
-            }
+                    })
+                }
+                composable("collection") { CollectionScreen(viewModel = sharedCollectionViewModel) }
 
+                // 将改变语言的权利单独赋给 ProfileScreen
+                composable("profile") {
+                    ProfileScreen(
+                        isEnglish = isEnglish,
+                        onLanguageChange = { isEnglish = it }
+                    )
+                }
 
-            composable("collection") { CollectionScreen(viewModel = sharedCollectionViewModel) }
+                composable(
+                    route = "detail/{trailName}?imageUrl={imageUrl}",
+                    arguments = listOf(
+                        navArgument("trailName") { type = NavType.StringType },
+                        navArgument("imageUrl") { type = NavType.StringType; defaultValue = "" }
+                    )
+                ) { backStackEntry ->
+                    val trailName = backStackEntry.arguments?.getString("trailName") ?: "Unknown Trail"
+                    val encodedUrl = backStackEntry.arguments?.getString("imageUrl") ?: ""
+                    val imageUrl = URLDecoder.decode(encodedUrl, StandardCharsets.UTF_8.toString())
 
-            composable("profile") { ProfileScreen() }
-
-            composable(
-                route = "detail/{trailName}?imageUrl={imageUrl}",
-                arguments = listOf(
-                    navArgument("trailName") { type = NavType.StringType },
-                    navArgument("imageUrl") { type = NavType.StringType; defaultValue = "" }
-                )
-            ) { backStackEntry ->
-                val trailName = backStackEntry.arguments?.getString("trailName") ?: "Unknown Trail"
-                val encodedUrl = backStackEntry.arguments?.getString("imageUrl") ?: ""
-                val imageUrl = URLDecoder.decode(encodedUrl, StandardCharsets.UTF_8.toString())
-
-                DetailScreen(
-                    trailName = trailName,
-                    imageUrl = imageUrl.ifEmpty { "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=2560&auto=format&fit=crop" },
-                    onBackClick = { navController.popBackStack() },
-                    collectionViewModel = sharedCollectionViewModel //
-                )
+                    DetailScreen(
+                        trailName = trailName,
+                        imageUrl = imageUrl.ifEmpty { "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=2560&auto=format&fit=crop" },
+                        onBackClick = { navController.popBackStack() },
+                        collectionViewModel = sharedCollectionViewModel
+                    )
+                }
             }
         }
     }

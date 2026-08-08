@@ -19,6 +19,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.example.natureexplorer.LocalIsEnglish
 import com.example.natureexplorer.ui.viewmodels.CollectionViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -31,14 +32,28 @@ fun DetailScreen(
 ) {
     val collectionState by collectionViewModel.uiState.collectAsState()
     val isFavorite = collectionState.savedTrails.any { it.name == trailName }
-
-
     val scrollState = rememberScrollState()
+
+    // 获取全局语言状态
+    val isEnglish = LocalIsEnglish.current
+
+    // 动态多语言文案
+    val appBarTitle = if (isEnglish) "Trail Details" else "路线详情"
+    val approxDist = if (isEnglish) "Approx. 5 km away" else "距您约 5 公里"
+    val aboutTitle = if (isEnglish) "About this trail" else "关于此路线"
+    val aboutDesc = if (isEnglish) {
+        "This is a beautiful natural trail featuring diverse flora and fauna. Perfect for a weekend hike to reconnect with nature. Remember to stay on the designated paths to protect the local ecosystem."
+    } else {
+        "这是一条美丽的自然路线，拥有丰富的动植物资源。非常适合周末徒步，重新与大自然建立联系。请记住留在指定的路径上，以保护当地的生态系统。"
+    }
+    val mapTitle = if (isEnglish) "Location Map" else "位置地图"
+    val mapPlaceholderTitle = if (isEnglish) "Interactive Map Ready" else "交互式地图已就绪"
+    val mapPlaceholderDesc = if (isEnglish) "(Google Maps API Key Required)" else "(需要 Google Maps API 密钥)"
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Trail Details") },
+                title = { Text(appBarTitle) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
@@ -74,6 +89,7 @@ fun DetailScreen(
             Column(
                 modifier = Modifier.padding(16.dp)
             ) {
+                // 地名通常由后端数据决定，此处保持动态变量传入
                 Text(
                     text = trailName,
                     style = MaterialTheme.typography.headlineMedium,
@@ -93,29 +109,28 @@ fun DetailScreen(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "Approx. 5 km away",
+                        text = approxDist,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
                 Text(
-                    text = "About this trail",
+                    text = aboutTitle,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
 
                 Text(
-                    text = "This is a beautiful natural trail featuring diverse flora and fauna. Perfect for a weekend hike to reconnect with nature. Remember to stay on the designated paths to protect the local ecosystem.",
+                    text = aboutDesc,
                     style = MaterialTheme.typography.bodyLarge,
                     lineHeight = MaterialTheme.typography.bodyLarge.lineHeight * 1.2f,
                     modifier = Modifier.padding(bottom = 24.dp)
                 )
 
-
                 Text(
-                    text = "Location Map",
+                    text = mapTitle,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.padding(bottom = 12.dp)
@@ -127,7 +142,6 @@ fun DetailScreen(
                         .height(220.dp)
                         .clip(RoundedCornerShape(16.dp))
                 ) {
-
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
@@ -143,12 +157,12 @@ fun DetailScreen(
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = "Interactive Map Ready",
+                                text = mapPlaceholderTitle,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSecondaryContainer
                             )
                             Text(
-                                text = "(Google Maps API Key Required)",
+                                text = mapPlaceholderDesc,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSecondaryContainer
                             )

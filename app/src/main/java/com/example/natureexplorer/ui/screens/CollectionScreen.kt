@@ -18,14 +18,22 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.example.natureexplorer.LocalIsEnglish
 import com.example.natureexplorer.ui.viewmodels.CollectionViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CollectionScreen(
-    viewModel: CollectionViewModel //
+    viewModel: CollectionViewModel
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
+    // 获取全局语言状态
+    val isEnglish = LocalIsEnglish.current
+
+    // 动态多语言文案
+    val pageTitle = if (isEnglish) "My Collection" else "我的收藏"
+    val emptyStateText = if (isEnglish) "No saved trails yet. Go explore!" else "暂无收藏路线。快去探索吧！"
 
     Column(
         modifier = Modifier
@@ -33,7 +41,7 @@ fun CollectionScreen(
             .padding(16.dp)
     ) {
         Text(
-            text = "My Collection",
+            text = pageTitle,
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(bottom = 16.dp, top = 24.dp)
@@ -45,7 +53,7 @@ fun CollectionScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "No saved trails yet. Go explore!",
+                    text = emptyStateText,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodyLarge
                 )
@@ -107,7 +115,6 @@ fun CollectionScreen(
                                     .fillMaxWidth(),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-
                                 AsyncImage(
                                     model = trail.imageUrl,
                                     contentDescription = trail.name,
@@ -127,6 +134,7 @@ fun CollectionScreen(
                                     )
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text(
+                                        // 假设添加时间由后端下发，实际项目中也会做多语言处理，这里保留原样
                                         text = trail.addedDate,
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant

@@ -20,209 +20,114 @@ import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileScreen() {
-    // 1. 定义控制底部弹窗显示状态的变量
+// 接收全局传进来的语言状态和修改函数
+fun ProfileScreen(
+    isEnglish: Boolean,
+    onLanguageChange: (Boolean) -> Unit
+) {
     var showPrivacySheet by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-
-    // 2. 定义隐私开关的状态变量 (模拟数据)
-    var preciseLocationEnabled by remember { mutableStateOf(false) } // 默认关闭，符合最小权限原则
+    var preciseLocationEnabled by remember { mutableStateOf(false) }
     var analyticsEnabled by remember { mutableStateOf(false) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        Text(
-            text = "Profile",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(bottom = 24.dp, top = 24.dp)
-        )
+    val pageTitle = if (isEnglish) "Profile" else "个人中心"
+    val levelText = if (isEnglish) "Local Explorer • Level 5" else "本地向导 • Lv.5"
+    val statContribLabel = if (isEnglish) "Contributions" else "贡献内容"
+    val statTrailsLabel = if (isEnglish) "Trails Hiked" else "探索足迹"
+    val statBadgesLabel = if (isEnglish) "Badges" else "获得徽章"
+    val achieveTitle = if (isEnglish) "Recent Achievements" else "近期成就"
+    val badge1 = if (isEnglish) "First Hike" else "初次徒步"
+    val badge2 = if (isEnglish) "Local Guide" else "本地向导"
+    val badge3 = if (isEnglish) "Trail Mapper" else "路线测绘"
+    val badge4 = if (isEnglish) "Helpful Reviewer" else "热心点评"
+    val settingsTitle = if (isEnglish) "Account Settings" else "账号设置"
+    val privacyTitle = if (isEnglish) "Privacy & Permissions" else "隐私与权限"
+    val privacyDesc = if (isEnglish) "Manage location and data sharing" else "管理位置与数据共享"
+    val langTitle = if (isEnglish) "Language" else "语言设置"
+    val langDesc = if (isEnglish) "Switch to Chinese" else "切换为英文"
 
-        // 用户信息头部
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(bottom = 24.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(80.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "ZZ",
-                    style = MaterialTheme.typography.headlineLarge,
-                    color = MaterialTheme.colorScheme.onPrimary
-                )
+    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+        Text(text = pageTitle, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 24.dp, top = 24.dp))
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 24.dp)) {
+            Box(modifier = Modifier.size(80.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary), contentAlignment = Alignment.Center) {
+                Text("ZZ", style = MaterialTheme.typography.headlineLarge, color = MaterialTheme.colorScheme.onPrimary)
             }
             Spacer(modifier = Modifier.width(16.dp))
             Column {
-                Text(
-                    text = "Zhiwei Zhu",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = "Local Explorer • Level 5",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.SemiBold
-                )
+                Text("Zhiwei Zhu", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Text(text = levelText, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
             }
         }
-
-        // 统计数据面板
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 32.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            StatItem(label = "Contributions", value = "42")
-            StatItem(label = "Trails Hiked", value = "15")
-            StatItem(label = "Badges", value = "8")
+        Row(modifier = Modifier.fillMaxWidth().padding(bottom = 32.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
+            StatItem(label = statContribLabel, value = "42")
+            StatItem(label = statTrailsLabel, value = "15")
+            StatItem(label = statBadgesLabel, value = "8")
         }
-
-        // 成就徽章区
-        Text(
-            text = "Recent Achievements",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.padding(bottom = 12.dp)
-        )
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier.padding(bottom = 32.dp)
-        ) {
-            item { BadgeItem(icon = Icons.Filled.Star, title = "First Hike") }
-            item { BadgeItem(icon = Icons.Filled.Place, title = "Local Guide") }
-            item { BadgeItem(icon = Icons.Filled.Map, title = "Trail Mapper") }
-            item { BadgeItem(icon = Icons.Filled.ThumbUp, title = "Helpful Reviewer") }
+        Text(text = achieveTitle, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(bottom = 12.dp))
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp), modifier = Modifier.padding(bottom = 32.dp)) {
+            item { BadgeItem(icon = Icons.Filled.Star, title = badge1) }
+            item { BadgeItem(icon = Icons.Filled.Place, title = badge2) }
+            item { BadgeItem(icon = Icons.Filled.Map, title = badge3) }
+            item { BadgeItem(icon = Icons.Filled.ThumbUp, title = badge4) }
         }
-
-        // 设置列表
-        Text(
-            text = "Account Settings",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
-
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant
-            )
-        ) {
+        Text(text = settingsTitle, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(bottom = 8.dp))
+        Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
             Column {
                 ListItem(
-                    // 点击触发弹窗显示
                     modifier = Modifier.clickable { showPrivacySheet = true },
-                    headlineContent = { Text("Privacy & Permissions") },
-                    supportingContent = { Text("Manage location and data sharing") },
+                    headlineContent = { Text(privacyTitle) },
+                    supportingContent = { Text(privacyDesc) },
                     leadingContent = { Icon(Icons.Filled.Shield, contentDescription = "Privacy") },
                     colors = ListItemDefaults.colors(containerColor = androidx.compose.ui.graphics.Color.Transparent)
                 )
                 HorizontalDivider()
                 ListItem(
-                    headlineContent = { Text("General Settings") },
-                    leadingContent = { Icon(Icons.Filled.Settings, contentDescription = "Settings") },
+                    headlineContent = { Text(langTitle) },
+                    supportingContent = { Text(langDesc) },
+                    leadingContent = { Icon(Icons.Filled.Settings, contentDescription = "Language") },
+                    trailingContent = {
+                        Switch(
+                            checked = !isEnglish,
+                            onCheckedChange = { onLanguageChange(!isEnglish) }, // 呼叫外层更改全局状态
+                            thumbContent = if (!isEnglish) { { Text("中", style = MaterialTheme.typography.labelSmall) } } else { { Text("EN", style = MaterialTheme.typography.labelSmall) } }
+                        )
+                    },
                     colors = ListItemDefaults.colors(containerColor = androidx.compose.ui.graphics.Color.Transparent)
                 )
             }
         }
     }
 
-    // 3. 隐私控制底部弹窗的 UI 实现
     if (showPrivacySheet) {
-        ModalBottomSheet(
-            onDismissRequest = { showPrivacySheet = false },
-            sheetState = sheetState,
-            containerColor = MaterialTheme.colorScheme.surface
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 16.dp)
-            ) {
-                Text(
-                    text = "Privacy Controls",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-                Text(
-                    text = "We believe in data minimization. You control what you share.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(bottom = 24.dp)
-                )
+        val sheetTitle = if (isEnglish) "Privacy Controls" else "隐私控制"
+        val sheetDesc = if (isEnglish) "We believe in data minimization. You control what you share." else "我们坚信数据最小化原则。您的数据由您做主。"
+        val locTitle = if (isEnglish) "Precise Location" else "精确定位"
+        val locDesc = if (isEnglish) "Use exact GPS for navigation." else "使用精确的 GPS 坐标进行导航。"
+        val anaTitle = if (isEnglish) "Anonymous Analytics" else "匿名数据分析"
+        val anaDesc = if (isEnglish) "Help us improve without personal identifiers." else "分享崩溃日志帮助改进，不含身份信息。"
+        val saveBtn = if (isEnglish) "Save Preferences" else "保存设置"
 
-                // 开关 1: 精确位置
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+        ModalBottomSheet(onDismissRequest = { showPrivacySheet = false }, sheetState = sheetState) {
+            Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 16.dp)) {
+                Text(text = sheetTitle, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 8.dp))
+                Text(text = sheetDesc, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 24.dp))
+                Row(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     Column(modifier = Modifier.weight(1f).padding(end = 16.dp)) {
-                        Text(
-                            text = "Precise Location",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        Text(
-                            text = "Use exact GPS for navigation. If off, we only use approximate area to save battery and protect privacy.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        Text(text = locTitle, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                        Text(text = locDesc, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
-                    Switch(
-                        checked = preciseLocationEnabled,
-                        onCheckedChange = { preciseLocationEnabled = it }
-                    )
+                    Switch(checked = preciseLocationEnabled, onCheckedChange = { preciseLocationEnabled = it })
                 }
-
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-
-                // 开关 2: 数据分析
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 24.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                Row(modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     Column(modifier = Modifier.weight(1f).padding(end = 16.dp)) {
-                        Text(
-                            text = "Anonymous Analytics",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        Text(
-                            text = "Help us improve by sharing crash reports and feature usage without personal identifiers.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        Text(text = anaTitle, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                        Text(text = anaDesc, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
-                    Switch(
-                        checked = analyticsEnabled,
-                        onCheckedChange = { analyticsEnabled = it }
-                    )
+                    Switch(checked = analyticsEnabled, onCheckedChange = { analyticsEnabled = it })
                 }
-
-                Button(
-                    onClick = { showPrivacySheet = false },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text("Save Preferences")
+                Button(onClick = { showPrivacySheet = false }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) {
+                    Text(saveBtn)
                 }
                 Spacer(modifier = Modifier.height(24.dp))
             }
@@ -233,47 +138,21 @@ fun ProfileScreen() {
 @Composable
 fun StatItem(label: String, value: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(
-            text = value,
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary
-        )
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+        Text(text = value, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+        Text(text = label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
 @Composable
 fun BadgeItem(icon: ImageVector, title: String) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.width(80.dp)
-    ) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(80.dp)) {
         Box(
-            modifier = Modifier
-                .size(64.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.secondaryContainer),
+            modifier = Modifier.size(64.dp).clip(CircleShape).background(MaterialTheme.colorScheme.secondaryContainer),
             contentAlignment = Alignment.Center
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = title,
-                tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                modifier = Modifier.size(32.dp)
-            )
+            Icon(imageVector = icon, contentDescription = title, tint = MaterialTheme.colorScheme.onSecondaryContainer, modifier = Modifier.size(32.dp))
         }
         Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = title,
-            style = MaterialTheme.typography.bodySmall,
-            textAlign = TextAlign.Center,
-            maxLines = 2
-        )
+        Text(text = title, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center, maxLines = 2)
     }
 }
-

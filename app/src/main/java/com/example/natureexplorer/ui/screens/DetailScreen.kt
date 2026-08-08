@@ -1,7 +1,6 @@
 package com.example.natureexplorer.ui.screens
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.FavoriteBorder
@@ -19,6 +18,7 @@ import coil.compose.AsyncImage
 @Composable
 fun DetailScreen(
     trailName: String,
+    imageUrl: String,
     onBackClick: () -> Unit
 ) {
     Scaffold(
@@ -45,15 +45,13 @@ fun DetailScreen(
         ) {
 
             AsyncImage(
-
-                model = "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=2560&auto=format&fit=crop",
+                model = imageUrl,
                 contentDescription = "Image of $trailName",
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(250.dp),
-                contentScale = ContentScale.Crop // 保证图片完美裁剪填充区域
+                contentScale = ContentScale.Crop
             )
-
 
             Column(
                 modifier = Modifier.padding(16.dp)

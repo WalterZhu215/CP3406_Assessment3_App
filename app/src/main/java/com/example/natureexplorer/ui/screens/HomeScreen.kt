@@ -14,18 +14,19 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.example.natureexplorer.ui.viewmodels.HomeViewModel
 
 @Composable
 fun HomeScreen(
-
     viewModel: HomeViewModel = viewModel()
 ) {
-
     val uiState by viewModel.uiState.collectAsState()
 
     LazyColumn(
@@ -34,7 +35,7 @@ fun HomeScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
-        // 1. 欢迎区块 (不变)
+
         item {
             Column(modifier = Modifier.padding(top = 16.dp)) {
                 Text(
@@ -66,10 +67,27 @@ fun HomeScreen(
                 elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
             ) {
                 Box(modifier = Modifier.fillMaxSize()) {
+
+                    AsyncImage(
+                        model = "https://images.unsplash.com/photo-1511497584788-876760111969?q=80&w=2560&auto=format&fit=crop", // 森林主题图片
+                        contentDescription = "Featured Today",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+
+
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(MaterialTheme.colorScheme.tertiaryContainer)
+                            .background(
+                                Brush.verticalGradient(
+                                    colors = listOf(
+                                        Color.Transparent,
+                                        Color.Black.copy(alpha = 0.8f) //
+                                    ),
+                                    startY = 150f //
+                                )
+                            )
                     )
 
                     Column(
@@ -77,23 +95,21 @@ fun HomeScreen(
                             .align(Alignment.BottomStart)
                             .padding(16.dp)
                     ) {
-
                         Text(
                             text = uiState.featuredTitle,
                             style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onTertiaryContainer,
+                            color = Color.White, // 强制设为白色以突出显示
                             fontWeight = FontWeight.Bold
                         )
                         Text(
                             text = uiState.featuredSubtitle,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onTertiaryContainer
+                            color = Color.White.copy(alpha = 0.8f) // 略微透明的白色
                         )
                     }
                 }
             }
         }
-
 
         item {
             Text(
@@ -105,7 +121,6 @@ fun HomeScreen(
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // 遍历 uiState 中的点评列表
                 items(uiState.communityReviews) { place ->
                     Card(
                         modifier = Modifier.width(220.dp),

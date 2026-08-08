@@ -1,7 +1,9 @@
 package com.example.natureexplorer.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -11,9 +13,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.example.natureexplorer.ui.viewmodels.ExploreViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
@@ -23,8 +28,8 @@ import com.google.accompanist.permissions.rememberPermissionState
 @Composable
 fun ExploreScreen(
     viewModel: ExploreViewModel = viewModel(),
-    // 新增：点击景点的回调函数，将具体的景点名字传出去
-    onTrailClick: (String) -> Unit
+    // 新增：回调函数现在同时传出名字和图片链接
+    onTrailClick: (String, String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -53,15 +58,34 @@ fun ExploreScreen(
             shape = RoundedCornerShape(12.dp)
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(16.dp))
+
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.padding(bottom = 16.dp)
+        ) {
+            items(uiState.categories) { category ->
+                val isSelected = category == uiState.selectedCategory
+                FilterChip(
+                    selected = isSelected,
+                    onClick = { viewModel.updateCategory(category) },
+                    label = { Text(category) },
+                    shape = RoundedCornerShape(16.dp),
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                        selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                )
+            }
+        }
 
         if (locationPermissionState.status.isGranted) {
             Text(
-                text = "Nearby Trails (Permission Granted!)",
+                text = "Nearby Trails",
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(bottom = 12.dp)
             )
-            Spacer(modifier = Modifier.height(16.dp))
 
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -72,30 +96,54 @@ fun ExploreScreen(
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.surfaceVariant
                         ),
-                        // 触发点击事件，将 trail.name 传给外层（MainActivity）
-                        onClick = { onTrailClick(trail.name) }
+
+                        onClick = { onTrailClick(trail.name, trail.imageUrl) }
                     ) {
                         Row(
                             modifier = Modifier
-                                .padding(16.dp)
+                                .padding(12.dp)
                                 .fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(
-                                text = "📍",
-                                style = MaterialTheme.typography.titleLarge
+                            AsyncImage(
+                                model = trail.imageUrl,
+                                contentDescription = trail.name,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .size(72.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(MaterialTheme.colorScheme.secondaryContainer)
                             )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column {
+
+                            Spacer(modifier = Modifier.width(16.dp))
+
+                            Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = trail.name,
                                     style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.Bold,
+                                    maxLines = 1
                                 )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.Filled.LocationOn,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = trail.distance,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                }
                                 Text(
-                                    text = trail.distance,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.primary
+                                    text = trail.category,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.padding(top = 4.dp)
                                 )
                             }
                         }
@@ -105,45 +153,23 @@ fun ExploreScreen(
         } else {
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer
-                ),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
                 shape = RoundedCornerShape(16.dp)
             ) {
-                Column(
-                    modifier = Modifier.padding(16.dp)
-                ) {
+                Column(modifier = Modifier.padding(16.dp)) {
                     Row(
                         modifier = Modifier.padding(bottom = 8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            imageVector = Icons.Filled.LocationOn,
-                            contentDescription = "Location",
-                            tint = MaterialTheme.colorScheme.onSecondaryContainer
-                        )
+                        Icon(Icons.Filled.LocationOn, contentDescription = "Location", tint = MaterialTheme.colorScheme.onSecondaryContainer)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Find trails near you",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSecondaryContainer,
-                            fontWeight = FontWeight.SemiBold
-                        )
+                        Text("Find trails near you", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSecondaryContainer, fontWeight = FontWeight.SemiBold)
                     }
-
-                    Text(
-                        text = "To show nearby locations, Nature Explorer needs approximate location access. We process this locally to protect your privacy.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
-
+                    Text("To show nearby locations, Nature Explorer needs approximate location access. We process this locally to protect your privacy.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSecondaryContainer)
                     Spacer(modifier = Modifier.height(12.dp))
-
                     Button(
                         onClick = { locationPermissionState.launchPermissionRequest() },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary
-                        )
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                     ) {
                         Text("Enable Location")
                     }

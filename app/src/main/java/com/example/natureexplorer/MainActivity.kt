@@ -22,6 +22,9 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.natureexplorer.ui.theme.NatureExplorerTheme
 import com.example.natureexplorer.ui.screens.*
+import java.net.URLDecoder
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -41,7 +44,6 @@ fun NatureExplorerApp() {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    // 控制底部导航栏在详情页时隐藏
     val bottomBarDestination = listOf("home", "explore", "collection", "profile").any { it == currentRoute }
 
     Scaffold(
@@ -107,11 +109,13 @@ fun NatureExplorerApp() {
         ) {
             composable("home") { HomeScreen() }
 
-            // ExploreScreen 传入 onTrailClick 回调，触发带参数的导航
             composable("explore") {
                 ExploreScreen(
-                    onTrailClick = { trailName ->
-                        navController.navigate("detail/$trailName")
+                    onTrailClick = { trailName, imageUrl ->
+
+                        val encodedUrl = URLEncoder.encode(imageUrl, StandardCharsets.UTF_8.toString())
+
+                        navController.navigate("detail/$trailName?imageUrl=$encodedUrl")
                     }
                 )
             }
@@ -119,17 +123,24 @@ fun NatureExplorerApp() {
             composable("collection") { CollectionScreen() }
             composable("profile") { ProfileScreen() }
 
-            // 注册新的详情页路由，支持接收 {trailName} 参数
+
             composable(
-                route = "detail/{trailName}",
-                arguments = listOf(navArgument("trailName") { type = NavType.StringType })
+                route = "detail/{trailName}?imageUrl={imageUrl}",
+                arguments = listOf(
+                    navArgument("trailName") { type = NavType.StringType },
+                    navArgument("imageUrl") { type = NavType.StringType; defaultValue = "" }
+                )
             ) { backStackEntry ->
-                // 解析传过来的参数
                 val trailName = backStackEntry.arguments?.getString("trailName") ?: "Unknown Trail"
+                val encodedUrl = backStackEntry.arguments?.getString("imageUrl") ?: ""
+
+
+                val imageUrl = URLDecoder.decode(encodedUrl, StandardCharsets.UTF_8.toString())
 
                 DetailScreen(
                     trailName = trailName,
-                    onBackClick = { navController.popBackStack() } // 返回上一页
+                    imageUrl = imageUrl.ifEmpty { "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=2560&auto=format&fit=crop" }, // 兜底的默认图片
+                    onBackClick = { navController.popBackStack() }
                 )
             }
         }

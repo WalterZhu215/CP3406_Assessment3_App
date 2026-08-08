@@ -23,7 +23,7 @@ import com.example.natureexplorer.ui.viewmodels.CollectionViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CollectionScreen(
-    viewModel: CollectionViewModel // 接收从外部传进来的 ViewModel
+    viewModel: CollectionViewModel //
 ) {
     val uiState by viewModel.uiState.collectAsState()
 

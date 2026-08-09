@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -32,9 +33,14 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+
 import com.example.natureexplorer.data.QuizRepository
 import com.example.natureexplorer.data.TrailDatabase
 import com.example.natureexplorer.data.TrailRepository
+import com.example.natureexplorer.data.WeatherRepository
+
+import com.example.natureexplorer.network.WeatherApiClient
+
 import com.example.natureexplorer.ui.screens.CollectionScreen
 import com.example.natureexplorer.ui.screens.DetailScreen
 import com.example.natureexplorer.ui.screens.ExploreScreen
@@ -43,18 +49,27 @@ import com.example.natureexplorer.ui.screens.ProfileScreen
 import com.example.natureexplorer.ui.screens.QuizScreen
 import com.example.natureexplorer.ui.screens.SettingsScreen
 import com.example.natureexplorer.ui.screens.StatisticsScreen
+
 import com.example.natureexplorer.ui.theme.NatureExplorerTheme
+
 import com.example.natureexplorer.ui.viewmodels.CollectionViewModel
 import com.example.natureexplorer.ui.viewmodels.CollectionViewModelFactory
+import com.example.natureexplorer.ui.viewmodels.HomeViewModel
+import com.example.natureexplorer.ui.viewmodels.HomeViewModelFactory
 import com.example.natureexplorer.ui.viewmodels.QuizViewModel
 import com.example.natureexplorer.ui.viewmodels.QuizViewModelFactory
 import com.example.natureexplorer.ui.viewmodels.StatisticsViewModel
 import com.example.natureexplorer.ui.viewmodels.StatisticsViewModelFactory
+
 import java.net.URLDecoder
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
 
+/*
+ * Makes the selected language available
+ * throughout the Compose UI.
+ */
 val LocalIsEnglish =
     compositionLocalOf {
         true
@@ -87,32 +102,61 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun NatureExplorerApp() {
 
+    /*
+     * Global language preference.
+     *
+     * true  = English
+     * false = Chinese
+     */
     var isEnglish by
     rememberSaveable {
         mutableStateOf(true)
     }
 
 
+    /*
+     * Global quiz difficulty.
+     *
+     * This value is controlled by
+     * SettingsScreen.
+     */
     var quizDifficulty by
     rememberSaveable {
         mutableStateOf("Medium")
     }
 
 
+    /*
+     * Android context.
+     */
     val context =
         LocalContext.current
 
 
+    /*
+     * -------------------------------------------------
+     * ROOM DATABASE
+     * -------------------------------------------------
+     */
     val database =
-        androidx.compose.runtime.remember {
+        remember {
 
             TrailDatabase
                 .getDatabase(context)
         }
 
 
+    /*
+     * -------------------------------------------------
+     * REPOSITORIES
+     * -------------------------------------------------
+     */
+
+    /*
+     * Handles saved trail data.
+     */
     val trailRepository =
-        androidx.compose.runtime.remember {
+        remember {
 
             TrailRepository(
                 database.trailDao()
@@ -120,8 +164,11 @@ fun NatureExplorerApp() {
         }
 
 
+    /*
+     * Handles quiz result data.
+     */
     val quizRepository =
-        androidx.compose.runtime.remember {
+        remember {
 
             QuizRepository(
                 database.quizResultDao()
@@ -129,6 +176,29 @@ fun NatureExplorerApp() {
         }
 
 
+    /*
+     * Handles live weather/environmental data.
+     */
+    val weatherRepository =
+        remember {
+
+            WeatherRepository(
+                WeatherApiClient.apiService
+            )
+        }
+
+
+    /*
+     * -------------------------------------------------
+     * SHARED VIEWMODELS
+     * -------------------------------------------------
+     */
+
+    /*
+     * Collection ViewModel is shared because
+     * DetailScreen and CollectionScreen both
+     * access saved trail information.
+     */
     val sharedCollectionViewModel:
             CollectionViewModel =
 
@@ -141,6 +211,34 @@ fun NatureExplorerApp() {
         )
 
 
+    /*
+     * Home ViewModel connects:
+     *
+     * HomeScreen
+     *      ↓
+     * HomeViewModel
+     *      ↓
+     * WeatherRepository
+     *      ↓
+     * Open-Meteo API
+     */
+    val homeViewModel:
+            HomeViewModel =
+
+        viewModel(
+
+            factory =
+                HomeViewModelFactory(
+                    weatherRepository
+                )
+        )
+
+
+    /*
+     * -------------------------------------------------
+     * NAVIGATION
+     * -------------------------------------------------
+     */
     val navController =
         rememberNavController()
 
@@ -156,6 +254,10 @@ fun NatureExplorerApp() {
             ?.route
 
 
+    /*
+     * Bottom navigation is displayed only
+     * on the five main pages.
+     */
     val bottomBarDestination =
 
         listOf(
@@ -170,6 +272,10 @@ fun NatureExplorerApp() {
             }
 
 
+    /*
+     * Provides the language preference
+     * to every screen.
+     */
     CompositionLocalProvider(
 
         LocalIsEnglish provides
@@ -180,6 +286,11 @@ fun NatureExplorerApp() {
 
         Scaffold(
 
+            /*
+             * -------------------------------------------------
+             * BOTTOM NAVIGATION
+             * -------------------------------------------------
+             */
             bottomBar = {
 
                 if (bottomBarDestination) {
@@ -188,6 +299,9 @@ fun NatureExplorerApp() {
                     NavigationBar {
 
 
+                        /*
+                         * HOME
+                         */
                         NavigationBarItem(
 
                             icon = {
@@ -225,16 +339,24 @@ fun NatureExplorerApp() {
                                     popUpTo(
                                         "home"
                                     ) {
-                                        saveState = true
+
+                                        saveState =
+                                            true
                                     }
 
-                                    launchSingleTop = true
-                                    restoreState = true
+                                    launchSingleTop =
+                                        true
+
+                                    restoreState =
+                                        true
                                 }
                             }
                         )
 
 
+                        /*
+                         * EXPLORE
+                         */
                         NavigationBarItem(
 
                             icon = {
@@ -272,16 +394,24 @@ fun NatureExplorerApp() {
                                     popUpTo(
                                         "home"
                                     ) {
-                                        saveState = true
+
+                                        saveState =
+                                            true
                                     }
 
-                                    launchSingleTop = true
-                                    restoreState = true
+                                    launchSingleTop =
+                                        true
+
+                                    restoreState =
+                                        true
                                 }
                             }
                         )
 
 
+                        /*
+                         * COLLECTION
+                         */
                         NavigationBarItem(
 
                             icon = {
@@ -319,16 +449,24 @@ fun NatureExplorerApp() {
                                     popUpTo(
                                         "home"
                                     ) {
-                                        saveState = true
+
+                                        saveState =
+                                            true
                                     }
 
-                                    launchSingleTop = true
-                                    restoreState = true
+                                    launchSingleTop =
+                                        true
+
+                                    restoreState =
+                                        true
                                 }
                             }
                         )
 
 
+                        /*
+                         * STATISTICS
+                         */
                         NavigationBarItem(
 
                             icon = {
@@ -366,16 +504,24 @@ fun NatureExplorerApp() {
                                     popUpTo(
                                         "home"
                                     ) {
-                                        saveState = true
+
+                                        saveState =
+                                            true
                                     }
 
-                                    launchSingleTop = true
-                                    restoreState = true
+                                    launchSingleTop =
+                                        true
+
+                                    restoreState =
+                                        true
                                 }
                             }
                         )
 
 
+                        /*
+                         * PROFILE
+                         */
                         NavigationBarItem(
 
                             icon = {
@@ -413,11 +559,16 @@ fun NatureExplorerApp() {
                                     popUpTo(
                                         "home"
                                     ) {
-                                        saveState = true
+
+                                        saveState =
+                                            true
                                     }
 
-                                    launchSingleTop = true
-                                    restoreState = true
+                                    launchSingleTop =
+                                        true
+
+                                    restoreState =
+                                        true
                                 }
                             }
                         )
@@ -428,6 +579,11 @@ fun NatureExplorerApp() {
         ) { innerPadding ->
 
 
+            /*
+             * -------------------------------------------------
+             * NAVIGATION HOST
+             * -------------------------------------------------
+             */
             NavHost(
 
                 navController =
@@ -444,18 +600,30 @@ fun NatureExplorerApp() {
 
 
                 /*
-                 * LANDING PAGE
+                 * =================================================
+                 * LANDING PAGE / HOME
+                 * =================================================
+                 *
+                 * Includes live environmental information
+                 * from Open-Meteo.
                  */
                 composable(
                     route = "home"
                 ) {
 
-                    HomeScreen()
+
+                    HomeScreen(
+
+                        viewModel =
+                            homeViewModel
+                    )
                 }
 
 
                 /*
-                 * EXPLORE PAGE
+                 * =================================================
+                 * EXPLORE SCREEN
+                 * =================================================
                  */
                 composable(
                     route = "explore"
@@ -469,6 +637,10 @@ fun NatureExplorerApp() {
                                 imageUrl ->
 
 
+                            /*
+                             * Encode the URL before placing
+                             * it inside a navigation route.
+                             */
                             val encodedUrl =
 
                                 URLEncoder.encode(
@@ -489,7 +661,9 @@ fun NatureExplorerApp() {
 
 
                 /*
-                 * COLLECTION PAGE
+                 * =================================================
+                 * COLLECTION SCREEN
+                 * =================================================
                  */
                 composable(
                     route = "collection"
@@ -526,7 +700,12 @@ fun NatureExplorerApp() {
 
 
                 /*
+                 * =================================================
                  * USER STATISTICS SCREEN
+                 * =================================================
+                 *
+                 * Reads real quiz results and saved trails
+                 * from Room.
                  */
                 composable(
                     route = "statistics"
@@ -559,7 +738,9 @@ fun NatureExplorerApp() {
 
 
                 /*
-                 * PROFILE PAGE
+                 * =================================================
+                 * PROFILE SCREEN
+                 * =================================================
                  */
                 composable(
                     route = "profile"
@@ -588,7 +769,14 @@ fun NatureExplorerApp() {
 
 
                 /*
+                 * =================================================
                  * SETTINGS SCREEN
+                 * =================================================
+                 *
+                 * Controls:
+                 *
+                 * - Language
+                 * - Quiz difficulty
                  */
                 composable(
                     route = "settings"
@@ -625,7 +813,9 @@ fun NatureExplorerApp() {
 
 
                 /*
-                 * TRAIL DETAILS
+                 * =================================================
+                 * TRAIL DETAIL SCREEN
+                 * =================================================
                  */
                 composable(
 
@@ -658,6 +848,9 @@ fun NatureExplorerApp() {
                 ) { backStackEntry ->
 
 
+                    /*
+                     * Get the selected trail name.
+                     */
                     val trailName =
 
                         backStackEntry
@@ -668,6 +861,9 @@ fun NatureExplorerApp() {
                             ?: "Unknown Trail"
 
 
+                    /*
+                     * Get the encoded image URL.
+                     */
                     val encodedUrl =
 
                         backStackEntry
@@ -678,6 +874,9 @@ fun NatureExplorerApp() {
                             ?: ""
 
 
+                    /*
+                     * Decode the image URL.
+                     */
                     val imageUrl =
 
                         URLDecoder.decode(
@@ -719,7 +918,11 @@ fun NatureExplorerApp() {
 
 
                 /*
+                 * =================================================
                  * LEARNING ACTIVITY / QUIZ
+                 * =================================================
+                 *
+                 * Quiz results are saved into Room.
                  */
                 composable(
 
@@ -741,6 +944,9 @@ fun NatureExplorerApp() {
                 ) { backStackEntry ->
 
 
+                    /*
+                     * Get trail name from navigation.
+                     */
                     val trailName =
 
                         backStackEntry
@@ -751,6 +957,11 @@ fun NatureExplorerApp() {
                             ?: "Trail"
 
 
+                    /*
+                     * Each Quiz screen receives a
+                     * QuizViewModel connected to the
+                     * QuizRepository.
+                     */
                     val quizViewModel:
                             QuizViewModel =
 

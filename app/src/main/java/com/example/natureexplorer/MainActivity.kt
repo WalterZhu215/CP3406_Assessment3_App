@@ -10,6 +10,7 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -20,7 +21,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -40,18 +41,24 @@ import com.example.natureexplorer.ui.screens.ExploreScreen
 import com.example.natureexplorer.ui.screens.HomeScreen
 import com.example.natureexplorer.ui.screens.ProfileScreen
 import com.example.natureexplorer.ui.screens.QuizScreen
+import com.example.natureexplorer.ui.screens.SettingsScreen
+import com.example.natureexplorer.ui.screens.StatisticsScreen
 import com.example.natureexplorer.ui.theme.NatureExplorerTheme
 import com.example.natureexplorer.ui.viewmodels.CollectionViewModel
 import com.example.natureexplorer.ui.viewmodels.CollectionViewModelFactory
 import com.example.natureexplorer.ui.viewmodels.QuizViewModel
 import com.example.natureexplorer.ui.viewmodels.QuizViewModelFactory
+import com.example.natureexplorer.ui.viewmodels.StatisticsViewModel
+import com.example.natureexplorer.ui.viewmodels.StatisticsViewModelFactory
 import java.net.URLDecoder
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
 
 val LocalIsEnglish =
-    compositionLocalOf { true }
+    compositionLocalOf {
+        true
+    }
 
 
 class MainActivity : ComponentActivity() {
@@ -60,7 +67,9 @@ class MainActivity : ComponentActivity() {
         savedInstanceState: Bundle?
     ) {
 
-        super.onCreate(savedInstanceState)
+        super.onCreate(
+            savedInstanceState
+        )
 
         enableEdgeToEdge()
 
@@ -79,19 +88,13 @@ class MainActivity : ComponentActivity() {
 fun NatureExplorerApp() {
 
     var isEnglish by
-    remember {
+    rememberSaveable {
         mutableStateOf(true)
     }
 
 
-    /*
-     * Learning difficulty will later be controlled
-     * by the Settings screen.
-     *
-     * For now, Medium is the default.
-     */
     var quizDifficulty by
-    remember {
+    rememberSaveable {
         mutableStateOf("Medium")
     }
 
@@ -100,22 +103,16 @@ fun NatureExplorerApp() {
         LocalContext.current
 
 
-    /*
-     * Room database
-     */
     val database =
-        remember {
+        androidx.compose.runtime.remember {
 
             TrailDatabase
                 .getDatabase(context)
         }
 
 
-    /*
-     * Repositories
-     */
     val trailRepository =
-        remember {
+        androidx.compose.runtime.remember {
 
             TrailRepository(
                 database.trailDao()
@@ -124,7 +121,7 @@ fun NatureExplorerApp() {
 
 
     val quizRepository =
-        remember {
+        androidx.compose.runtime.remember {
 
             QuizRepository(
                 database.quizResultDao()
@@ -132,9 +129,6 @@ fun NatureExplorerApp() {
         }
 
 
-    /*
-     * Shared Collection ViewModel
-     */
     val sharedCollectionViewModel:
             CollectionViewModel =
 
@@ -168,6 +162,7 @@ fun NatureExplorerApp() {
             "home",
             "explore",
             "collection",
+            "statistics",
             "profile"
         )
             .any {
@@ -176,14 +171,19 @@ fun NatureExplorerApp() {
 
 
     CompositionLocalProvider(
-        LocalIsEnglish provides isEnglish
+
+        LocalIsEnglish provides
+                isEnglish
+
     ) {
+
 
         Scaffold(
 
             bottomBar = {
 
                 if (bottomBarDestination) {
+
 
                     NavigationBar {
 
@@ -193,7 +193,9 @@ fun NatureExplorerApp() {
                             icon = {
 
                                 Icon(
-                                    Icons.Filled.Home,
+                                    imageVector =
+                                        Icons.Filled.Home,
+
                                     contentDescription =
                                         "Home"
                                 )
@@ -202,15 +204,17 @@ fun NatureExplorerApp() {
                             label = {
 
                                 Text(
-                                    if (isEnglish)
-                                        "Home"
-                                    else
-                                        "首页"
+                                    text =
+                                        if (isEnglish)
+                                            "Home"
+                                        else
+                                            "首页"
                                 )
                             },
 
                             selected =
-                                currentRoute == "home",
+                                currentRoute ==
+                                        "home",
 
                             onClick = {
 
@@ -218,7 +222,9 @@ fun NatureExplorerApp() {
                                     "home"
                                 ) {
 
-                                    popUpTo("home") {
+                                    popUpTo(
+                                        "home"
+                                    ) {
                                         saveState = true
                                     }
 
@@ -234,7 +240,9 @@ fun NatureExplorerApp() {
                             icon = {
 
                                 Icon(
-                                    Icons.Filled.Place,
+                                    imageVector =
+                                        Icons.Filled.Place,
+
                                     contentDescription =
                                         "Explore"
                                 )
@@ -243,15 +251,17 @@ fun NatureExplorerApp() {
                             label = {
 
                                 Text(
-                                    if (isEnglish)
-                                        "Explore"
-                                    else
-                                        "探索"
+                                    text =
+                                        if (isEnglish)
+                                            "Explore"
+                                        else
+                                            "探索"
                                 )
                             },
 
                             selected =
-                                currentRoute == "explore",
+                                currentRoute ==
+                                        "explore",
 
                             onClick = {
 
@@ -259,7 +269,9 @@ fun NatureExplorerApp() {
                                     "explore"
                                 ) {
 
-                                    popUpTo("home") {
+                                    popUpTo(
+                                        "home"
+                                    ) {
                                         saveState = true
                                     }
 
@@ -275,7 +287,9 @@ fun NatureExplorerApp() {
                             icon = {
 
                                 Icon(
-                                    Icons.Filled.Favorite,
+                                    imageVector =
+                                        Icons.Filled.Favorite,
+
                                     contentDescription =
                                         "Collection"
                                 )
@@ -284,10 +298,11 @@ fun NatureExplorerApp() {
                             label = {
 
                                 Text(
-                                    if (isEnglish)
-                                        "Collection"
-                                    else
-                                        "收藏"
+                                    text =
+                                        if (isEnglish)
+                                            "Saved"
+                                        else
+                                            "收藏"
                                 )
                             },
 
@@ -301,7 +316,9 @@ fun NatureExplorerApp() {
                                     "collection"
                                 ) {
 
-                                    popUpTo("home") {
+                                    popUpTo(
+                                        "home"
+                                    ) {
                                         saveState = true
                                     }
 
@@ -317,7 +334,56 @@ fun NatureExplorerApp() {
                             icon = {
 
                                 Icon(
-                                    Icons.Filled.Person,
+                                    imageVector =
+                                        Icons.Filled.Star,
+
+                                    contentDescription =
+                                        "Statistics"
+                                )
+                            },
+
+                            label = {
+
+                                Text(
+                                    text =
+                                        if (isEnglish)
+                                            "Stats"
+                                        else
+                                            "统计"
+                                )
+                            },
+
+                            selected =
+                                currentRoute ==
+                                        "statistics",
+
+                            onClick = {
+
+                                navController.navigate(
+                                    "statistics"
+                                ) {
+
+                                    popUpTo(
+                                        "home"
+                                    ) {
+                                        saveState = true
+                                    }
+
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            }
+                        )
+
+
+                        NavigationBarItem(
+
+                            icon = {
+
+                                Icon(
+                                    imageVector =
+                                        Icons.Filled.Person,
+
                                     contentDescription =
                                         "Profile"
                                 )
@@ -326,10 +392,11 @@ fun NatureExplorerApp() {
                             label = {
 
                                 Text(
-                                    if (isEnglish)
-                                        "Profile"
-                                    else
-                                        "我的"
+                                    text =
+                                        if (isEnglish)
+                                            "Profile"
+                                        else
+                                            "我的"
                                 )
                             },
 
@@ -343,7 +410,9 @@ fun NatureExplorerApp() {
                                     "profile"
                                 ) {
 
-                                    popUpTo("home") {
+                                    popUpTo(
+                                        "home"
+                                    ) {
                                         saveState = true
                                     }
 
@@ -377,7 +446,9 @@ fun NatureExplorerApp() {
                 /*
                  * LANDING PAGE
                  */
-                composable("home") {
+                composable(
+                    route = "home"
+                ) {
 
                     HomeScreen()
                 }
@@ -386,7 +457,10 @@ fun NatureExplorerApp() {
                 /*
                  * EXPLORE PAGE
                  */
-                composable("explore") {
+                composable(
+                    route = "explore"
+                ) {
+
 
                     ExploreScreen(
 
@@ -394,7 +468,9 @@ fun NatureExplorerApp() {
                                 trailName,
                                 imageUrl ->
 
+
                             val encodedUrl =
+
                                 URLEncoder.encode(
                                     imageUrl,
                                     StandardCharsets
@@ -402,7 +478,9 @@ fun NatureExplorerApp() {
                                         .toString()
                                 )
 
+
                             navController.navigate(
+
                                 "detail/$trailName?imageUrl=$encodedUrl"
                             )
                         }
@@ -413,7 +491,10 @@ fun NatureExplorerApp() {
                 /*
                  * COLLECTION PAGE
                  */
-                composable("collection") {
+                composable(
+                    route = "collection"
+                ) {
+
 
                     CollectionScreen(
 
@@ -424,7 +505,9 @@ fun NatureExplorerApp() {
                                 trailName,
                                 imageUrl ->
 
+
                             val encodedUrl =
+
                                 URLEncoder.encode(
                                     imageUrl,
                                     StandardCharsets
@@ -432,7 +515,9 @@ fun NatureExplorerApp() {
                                         .toString()
                                 )
 
+
                             navController.navigate(
+
                                 "detail/$trailName?imageUrl=$encodedUrl"
                             )
                         }
@@ -441,9 +526,45 @@ fun NatureExplorerApp() {
 
 
                 /*
+                 * USER STATISTICS SCREEN
+                 */
+                composable(
+                    route = "statistics"
+                ) {
+
+
+                    val statisticsViewModel:
+                            StatisticsViewModel =
+
+                        viewModel(
+
+                            factory =
+                                StatisticsViewModelFactory(
+
+                                    quizRepository =
+                                        quizRepository,
+
+                                    trailRepository =
+                                        trailRepository
+                                )
+                        )
+
+
+                    StatisticsScreen(
+
+                        viewModel =
+                            statisticsViewModel
+                    )
+                }
+
+
+                /*
                  * PROFILE PAGE
                  */
-                composable("profile") {
+                composable(
+                    route = "profile"
+                ) {
+
 
                     ProfileScreen(
 
@@ -451,7 +572,53 @@ fun NatureExplorerApp() {
                             isEnglish,
 
                         onLanguageChange = {
-                            isEnglish = it
+
+                            isEnglish =
+                                it
+                        },
+
+                        onSettingsClick = {
+
+                            navController.navigate(
+                                "settings"
+                            )
+                        }
+                    )
+                }
+
+
+                /*
+                 * SETTINGS SCREEN
+                 */
+                composable(
+                    route = "settings"
+                ) {
+
+
+                    SettingsScreen(
+
+                        isEnglish =
+                            isEnglish,
+
+                        quizDifficulty =
+                            quizDifficulty,
+
+                        onLanguageChange = {
+
+                            isEnglish =
+                                it
+                        },
+
+                        onDifficultyChange = {
+
+                            quizDifficulty =
+                                it
+                        },
+
+                        onBackClick = {
+
+                            navController
+                                .popBackStack()
                         }
                     )
                 }
@@ -483,7 +650,8 @@ fun NatureExplorerApp() {
                                 type =
                                     NavType.StringType
 
-                                defaultValue = ""
+                                defaultValue =
+                                    ""
                             }
                         )
 

@@ -28,16 +28,14 @@ fun DetailScreen(
     trailName: String,
     imageUrl: String,
     onBackClick: () -> Unit,
+    onQuizClick: () -> Unit,
     collectionViewModel: CollectionViewModel
 ) {
     val collectionState by collectionViewModel.uiState.collectAsState()
     val isFavorite = collectionState.savedTrails.any { it.name == trailName }
     val scrollState = rememberScrollState()
-
-    // 获取全局语言状态
     val isEnglish = LocalIsEnglish.current
 
-    // 动态多语言文案
     val appBarTitle = if (isEnglish) "Trail Details" else "路线详情"
     val approxDist = if (isEnglish) "Approx. 5 km away" else "距您约 5 公里"
     val aboutTitle = if (isEnglish) "About this trail" else "关于此路线"
@@ -49,15 +47,14 @@ fun DetailScreen(
     val mapTitle = if (isEnglish) "Location Map" else "位置地图"
     val mapPlaceholderTitle = if (isEnglish) "Interactive Map Ready" else "交互式地图已就绪"
     val mapPlaceholderDesc = if (isEnglish) "(Google Maps API Key Required)" else "(需要 Google Maps API 密钥)"
+    val quizBtnText = if (isEnglish) "Test Your Knowledge!" else "测试你的自然知识！" // 新增按钮文案
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text(appBarTitle) },
                 navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
-                    }
+                    IconButton(onClick = onBackClick) { Icon(Icons.Filled.ArrowBack, contentDescription = "Back") }
                 },
                 actions = {
                     IconButton(onClick = { collectionViewModel.toggleFavorite(trailName, imageUrl) }) {
@@ -71,105 +68,41 @@ fun DetailScreen(
             )
         }
     ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .verticalScroll(scrollState)
-        ) {
-            AsyncImage(
-                model = imageUrl,
-                contentDescription = "Image of $trailName",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(250.dp),
-                contentScale = ContentScale.Crop
-            )
+        Column(modifier = Modifier.fillMaxSize().padding(innerPadding).verticalScroll(scrollState)) {
+            AsyncImage(model = imageUrl, contentDescription = null, modifier = Modifier.fillMaxWidth().height(250.dp), contentScale = ContentScale.Crop)
 
-            Column(
-                modifier = Modifier.padding(16.dp)
-            ) {
-                // 地名通常由后端数据决定，此处保持动态变量传入
-                Text(
-                    text = trailName,
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.LocationOn,
-                        contentDescription = "Location",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(20.dp)
-                    )
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(text = trailName, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 8.dp))
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 16.dp)) {
+                    Icon(Icons.Filled.LocationOn, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = approxDist,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    Text(text = approxDist, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
 
-                Text(
-                    text = aboutTitle,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
+                Text(text = aboutTitle, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(bottom = 8.dp))
+                Text(text = aboutDesc, style = MaterialTheme.typography.bodyLarge, lineHeight = MaterialTheme.typography.bodyLarge.lineHeight * 1.2f, modifier = Modifier.padding(bottom = 24.dp))
 
-                Text(
-                    text = aboutDesc,
-                    style = MaterialTheme.typography.bodyLarge,
-                    lineHeight = MaterialTheme.typography.bodyLarge.lineHeight * 1.2f,
-                    modifier = Modifier.padding(bottom = 24.dp)
-                )
 
-                Text(
-                    text = mapTitle,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(bottom = 12.dp)
-                )
-
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(220.dp)
-                        .clip(RoundedCornerShape(16.dp))
+                Button(
+                    onClick = onQuizClick,
+                    modifier = Modifier.fillMaxWidth().height(56.dp).padding(bottom = 12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(MaterialTheme.colorScheme.secondaryContainer),
-                        contentAlignment = Alignment.Center
-                    ) {
+                    Text(quizBtnText, style = MaterialTheme.typography.titleMedium)
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Text(text = mapTitle, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(bottom = 12.dp))
+                Box(modifier = Modifier.fillMaxWidth().height(220.dp).clip(RoundedCornerShape(16.dp))) {
+                    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.secondaryContainer), contentAlignment = Alignment.Center) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(
-                                imageVector = Icons.Filled.LocationOn,
-                                contentDescription = "Map Placeholder",
-                                modifier = Modifier.size(48.dp),
-                                tint = MaterialTheme.colorScheme.primary
-                            )
+                            Icon(Icons.Filled.LocationOn, null, modifier = Modifier.size(48.dp), tint = MaterialTheme.colorScheme.primary)
                             Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = mapPlaceholderTitle,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSecondaryContainer
-                            )
-                            Text(
-                                text = mapPlaceholderDesc,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSecondaryContainer
-                            )
+                            Text(text = mapPlaceholderTitle, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSecondaryContainer)
+                            Text(text = mapPlaceholderDesc, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSecondaryContainer)
                         }
                     }
                 }
-
                 Spacer(modifier = Modifier.height(32.dp))
             }
         }

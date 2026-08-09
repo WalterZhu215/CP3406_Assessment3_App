@@ -53,7 +53,7 @@ fun NatureExplorerApp() {
     val sharedCollectionViewModel: CollectionViewModel = viewModel()
     val bottomBarDestination = listOf("home", "explore", "collection", "profile").any { it == currentRoute }
 
-
+    // 将全局语言状态注入到这棵 UI 树中
     CompositionLocalProvider(LocalIsEnglish provides isEnglish) {
         Scaffold(
             bottomBar = {
@@ -61,7 +61,7 @@ fun NatureExplorerApp() {
                     NavigationBar {
                         NavigationBarItem(
                             icon = { Icon(Icons.Filled.Home, contentDescription = "Home") },
-                            label = { Text(if (isEnglish) "Home" else "首页") }, // 底部导航栏中英切换
+                            label = { Text(if (isEnglish) "Home" else "首页") },
                             selected = currentRoute == "home",
                             onClick = {
                                 navController.navigate("home") { popUpTo("home") { saveState = true }; launchSingleTop = true; restoreState = true }
@@ -109,7 +109,6 @@ fun NatureExplorerApp() {
                     })
                 }
 
-
                 composable("collection") {
                     CollectionScreen(
                         viewModel = sharedCollectionViewModel,
@@ -120,13 +119,13 @@ fun NatureExplorerApp() {
                     )
                 }
 
-
                 composable("profile") {
                     ProfileScreen(
                         isEnglish = isEnglish,
                         onLanguageChange = { isEnglish = it }
                     )
                 }
+
 
                 composable(
                     route = "detail/{trailName}?imageUrl={imageUrl}",
@@ -143,7 +142,20 @@ fun NatureExplorerApp() {
                         trailName = trailName,
                         imageUrl = imageUrl.ifEmpty { "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=2560&auto=format&fit=crop" },
                         onBackClick = { navController.popBackStack() },
+                        onQuizClick = { navController.navigate("quiz/$trailName") }, // 跳转到测验页
                         collectionViewModel = sharedCollectionViewModel
+                    )
+                }
+
+
+                composable(
+                    route = "quiz/{trailName}",
+                    arguments = listOf(navArgument("trailName") { type = NavType.StringType })
+                ) { backStackEntry ->
+                    val trailName = backStackEntry.arguments?.getString("trailName") ?: "Trail"
+                    QuizScreen(
+                        trailName = trailName,
+                        onBackClick = { navController.popBackStack() }
                     )
                 }
             }

@@ -21,7 +21,6 @@ data class ExploreUiState(
 
 class ExploreViewModel : ViewModel() {
 
-
     private var allTrails = mutableListOf(
         Trail("Botanical Garden Trail", "2.1 km", "https://images.unsplash.com/photo-1551632811-561732d1e306?w=400&q=80", "Hiking"),
         Trail("Sunrise Peak", "5.4 km", "https://images.unsplash.com/photo-1600298882283-40b4dcb8b211?w=400&q=80", "Hiking"),
@@ -43,16 +42,21 @@ class ExploreViewModel : ViewModel() {
         applyFilters()
     }
 
-
     fun addNewTrail(name: String, distance: String, category: String) {
         val newTrail = Trail(
             name = name,
             distance = distance,
-            imageUrl = "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&q=80", // 默认风景图
+            imageUrl = "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&q=80",
             category = category
         )
-        allTrails.add(0, newTrail) // 添加到列表最前面
-        applyFilters() //
+        allTrails.add(0, newTrail)
+        applyFilters()
+    }
+
+
+    fun removeTrail(trailName: String) {
+        allTrails.removeAll { it.name == trailName }
+        applyFilters()
     }
 
     private fun applyFilters() {

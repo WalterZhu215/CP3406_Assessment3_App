@@ -5,7 +5,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-
 data class Trail(
     val name: String,
     val distance: String,
@@ -15,16 +14,15 @@ data class Trail(
 
 data class ExploreUiState(
     val searchQuery: String = "",
-    val selectedCategory: String = "All", // 选中的分类
-    val categories: List<String> = listOf("All", "Hiking", "Camping", "Cycling"), // 所有分类
+    val selectedCategory: String = "All",
+    val categories: List<String> = listOf("All", "Hiking", "Camping", "Cycling"),
     val nearbyTrails: List<Trail> = emptyList()
 )
 
 class ExploreViewModel : ViewModel() {
 
 
-
-    private val allTrails = listOf(
+    private var allTrails = mutableListOf(
         Trail("Botanical Garden Trail", "2.1 km", "https://images.unsplash.com/photo-1551632811-561732d1e306?w=400&q=80", "Hiking"),
         Trail("Sunrise Peak", "5.4 km", "https://images.unsplash.com/photo-1600298882283-40b4dcb8b211?w=400&q=80", "Hiking"),
         Trail("Hidden Waterfall", "7.2 km", "https://images.unsplash.com/photo-1433086966358-54859d0ed716?w=400&q=80", "Camping"),
@@ -35,18 +33,27 @@ class ExploreViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(ExploreUiState(nearbyTrails = allTrails))
     val uiState: StateFlow<ExploreUiState> = _uiState.asStateFlow()
 
-
     fun updateSearchQuery(newQuery: String) {
         _uiState.value = _uiState.value.copy(searchQuery = newQuery)
         applyFilters()
     }
-
 
     fun updateCategory(newCategory: String) {
         _uiState.value = _uiState.value.copy(selectedCategory = newCategory)
         applyFilters()
     }
 
+
+    fun addNewTrail(name: String, distance: String, category: String) {
+        val newTrail = Trail(
+            name = name,
+            distance = distance,
+            imageUrl = "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&q=80", // 默认风景图
+            category = category
+        )
+        allTrails.add(0, newTrail) // 添加到列表最前面
+        applyFilters() //
+    }
 
     private fun applyFilters() {
         val currentQuery = _uiState.value.searchQuery
@@ -58,8 +65,6 @@ class ExploreViewModel : ViewModel() {
 
             matchesSearch && matchesCategory
         }
-
         _uiState.value = _uiState.value.copy(nearbyTrails = filteredTrails)
     }
 }
-

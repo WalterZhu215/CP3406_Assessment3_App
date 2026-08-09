@@ -27,7 +27,7 @@ import java.net.URLDecoder
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
-// 定义全局的 CompositionLocal 变量，像空气一样包裹整个 App
+
 val LocalIsEnglish = compositionLocalOf { true }
 
 class MainActivity : ComponentActivity() {
@@ -44,7 +44,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun NatureExplorerApp() {
-    // 真正的语言状态源头在这里！
+
     var isEnglish by remember { mutableStateOf(true) }
 
     val navController = rememberNavController()
@@ -53,7 +53,7 @@ fun NatureExplorerApp() {
     val sharedCollectionViewModel: CollectionViewModel = viewModel()
     val bottomBarDestination = listOf("home", "explore", "collection", "profile").any { it == currentRoute }
 
-    // 将全局语言状态注入到这棵 UI 树中
+
     CompositionLocalProvider(LocalIsEnglish provides isEnglish) {
         Scaffold(
             bottomBar = {
@@ -101,15 +101,26 @@ fun NatureExplorerApp() {
                 modifier = Modifier.padding(innerPadding)
             ) {
                 composable("home") { HomeScreen() }
+
                 composable("explore") {
                     ExploreScreen(onTrailClick = { trailName, imageUrl ->
                         val encodedUrl = URLEncoder.encode(imageUrl, StandardCharsets.UTF_8.toString())
                         navController.navigate("detail/$trailName?imageUrl=$encodedUrl")
                     })
                 }
-                composable("collection") { CollectionScreen(viewModel = sharedCollectionViewModel) }
 
-                // 将改变语言的权利单独赋给 ProfileScreen
+
+                composable("collection") {
+                    CollectionScreen(
+                        viewModel = sharedCollectionViewModel,
+                        onTrailClick = { trailName, imageUrl ->
+                            val encodedUrl = URLEncoder.encode(imageUrl, StandardCharsets.UTF_8.toString())
+                            navController.navigate("detail/$trailName?imageUrl=$encodedUrl")
+                        }
+                    )
+                }
+
+
                 composable("profile") {
                     ProfileScreen(
                         isEnglish = isEnglish,

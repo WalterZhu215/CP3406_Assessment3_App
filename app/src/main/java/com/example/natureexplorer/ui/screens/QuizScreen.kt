@@ -1,126 +1,505 @@
 package com.example.natureexplorer.ui.screens
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Replay
+import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.natureexplorer.LocalIsEnglish
+import com.example.natureexplorer.domain.QuizQuestionBank
+import com.example.natureexplorer.ui.viewmodels.QuizViewModel
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun QuizScreen(
     trailName: String,
+    difficulty: String,
+    viewModel: QuizViewModel,
     onBackClick: () -> Unit
 ) {
-    val isEnglish = LocalIsEnglish.current
+
+    val isEnglish =
+        LocalIsEnglish.current
+
+    val uiState by
+    viewModel.uiState.collectAsState()
 
 
-    var currentQuestionIndex by remember { mutableStateOf(0) }
-    var score by remember { mutableStateOf(0) }
-    var showResult by remember { mutableStateOf(false) }
+    val questions = remember(
+        trailName,
+        difficulty,
+        isEnglish
+    ) {
 
-
-    val questions = listOf(
-        Pair(
-            if (isEnglish) "What type of ecosystem is typically protected in $trailName?" else "$trailName 通常保护哪种类型的生态系统？",
-            listOf(if (isEnglish) "Native Forest" else "原生森林", if (isEnglish) "Desert" else "沙漠", if (isEnglish) "Tundra" else "苔原")
-        ),
-        Pair(
-            if (isEnglish) "Why is it important to stay on the designated paths?" else "为什么留在指定的路径上很重要？",
-            listOf(if (isEnglish) "To protect local flora and fauna" else "为了保护当地动植物", if (isEnglish) "To walk faster" else "为了走得更快", if (isEnglish) "To avoid getting lost" else "为了避免迷路")
-        ),
-        Pair(
-            if (isEnglish) "What is a key principle of 'Leave No Trace'?" else "“无痕山林”的一个关键原则是什么？",
-            listOf(if (isEnglish) "Take only pictures, leave only footprints" else "只带走照片，只留下脚印", if (isEnglish) "Feed the wildlife" else "喂食野生动物", if (isEnglish) "Pick beautiful flowers" else "采摘美丽的花朵")
+        QuizQuestionBank.getQuestions(
+            trailName = trailName,
+            difficulty = difficulty,
+            isEnglish = isEnglish
         )
-    )
+    }
 
-    val correctAnswers = listOf(0, 0, 0)
+
+    val currentQuestionIndex =
+        uiState.currentQuestionIndex.coerceIn(
+            0,
+            questions.lastIndex
+        )
+
+    val currentQuestion =
+        questions[currentQuestionIndex]
+
 
     Scaffold(
+
         topBar = {
+
             TopAppBar(
-                title = { Text(if (isEnglish) "Nature Quiz" else "自然生态测验") },
+
+                title = {
+
+                    Text(
+                        text =
+                            if (isEnglish)
+                                "Nature Learning Quiz"
+                            else
+                                "自然学习测验"
+                    )
+                },
+
                 navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
+
+                    IconButton(
+                        onClick = onBackClick
+                    ) {
+
+                        Icon(
+                            imageVector =
+                                Icons.Filled.ArrowBack,
+                            contentDescription =
+                                "Back"
+                        )
                     }
                 }
             )
         }
+
     ) { innerPadding ->
+
+
         Column(
+
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
                 .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            if (showResult) {
 
-                Text(
-                    text = if (isEnglish) "Quiz Completed!" else "测验完成！",
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
+            horizontalAlignment =
+                Alignment.CenterHorizontally
+        ) {
+
+
+            if (uiState.showResult) {
+
+                QuizResultContent(
+                    score = uiState.score,
+                    totalQuestions = questions.size,
+                    difficulty = difficulty,
+                    resultSaved =
+                        uiState.resultSaved,
+                    isEnglish = isEnglish,
+                    onRestartClick = {
+                        viewModel.restartQuiz()
+                    },
+                    onBackClick =
+                        onBackClick
                 )
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = if (isEnglish) "Your Score: $score / ${questions.size}" else "你的得分: $score / ${questions.size}",
-                    style = MaterialTheme.typography.titleLarge
-                )
-                Spacer(modifier = Modifier.height(32.dp))
-                Button(
-                    onClick = onBackClick,
-                    modifier = Modifier.fillMaxWidth().height(50.dp)
-                ) {
-                    Text(if (isEnglish) "Return to Details" else "返回详情页")
-                }
+
             } else {
 
+                Text(
+                    text = trailName,
+                    style =
+                        MaterialTheme
+                            .typography
+                            .titleMedium,
+                    fontWeight =
+                        FontWeight.Bold
+                )
+
+
+                Spacer(
+                    modifier =
+                        Modifier.height(8.dp)
+                )
+
+
+                Text(
+                    text =
+                        if (isEnglish)
+                            "Difficulty: $difficulty"
+                        else
+                            "难度：$difficulty",
+
+                    color =
+                        MaterialTheme
+                            .colorScheme
+                            .primary
+                )
+
+
+                Spacer(
+                    modifier =
+                        Modifier.height(20.dp)
+                )
+
+
                 LinearProgressIndicator(
-                    progress = { (currentQuestionIndex + 1).toFloat() / questions.size },
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp)
+
+                    progress = {
+
+                        (currentQuestionIndex + 1)
+                            .toFloat() /
+                                questions.size
+                    },
+
+                    modifier =
+                        Modifier.fillMaxWidth()
                 )
+
+
+                Spacer(
+                    modifier =
+                        Modifier.height(10.dp)
+                )
+
 
                 Text(
-                    text = if (isEnglish) "Question ${currentQuestionIndex + 1}" else "第 ${currentQuestionIndex + 1} 题",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = questions[currentQuestionIndex].first,
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Spacer(modifier = Modifier.height(32.dp))
+                    text =
+                        if (isEnglish) {
 
+                            "Question ${currentQuestionIndex + 1} of ${questions.size}"
 
-                questions[currentQuestionIndex].second.forEachIndexed { index, answer ->
-                    OutlinedButton(
-                        onClick = {
-                            if (index == correctAnswers[currentQuestionIndex]) {
-                                score++
-                            }
-                            if (currentQuestionIndex < questions.size - 1) {
-                                currentQuestionIndex++
-                            } else {
-                                showResult = true
-                            }
+                        } else {
+
+                            "第 ${currentQuestionIndex + 1} 题，共 ${questions.size} 题"
                         },
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp).height(56.dp)
-                    ) {
-                        Text(answer, style = MaterialTheme.typography.bodyLarge)
+
+                    style =
+                        MaterialTheme
+                            .typography
+                            .bodyMedium
+                )
+
+
+                Spacer(
+                    modifier =
+                        Modifier.height(28.dp)
+                )
+
+
+                Text(
+                    text =
+                        currentQuestion.question,
+
+                    style =
+                        MaterialTheme
+                            .typography
+                            .headlineSmall,
+
+                    fontWeight =
+                        FontWeight.SemiBold
+                )
+
+
+                Spacer(
+                    modifier =
+                        Modifier.height(30.dp)
+                )
+
+
+                currentQuestion.answers
+                    .forEachIndexed {
+                            index,
+                            answer ->
+
+
+                        OutlinedButton(
+
+                            onClick = {
+
+                                viewModel.submitAnswer(
+
+                                    selectedAnswerIndex =
+                                        index,
+
+                                    correctAnswerIndex =
+                                        currentQuestion
+                                            .correctAnswerIndex,
+
+                                    totalQuestions =
+                                        questions.size,
+
+                                    trailName =
+                                        trailName
+                                )
+                            },
+
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(
+                                        vertical = 7.dp
+                                    )
+                                    .height(56.dp)
+                        ) {
+
+                            Text(
+                                text = answer,
+                                style =
+                                    MaterialTheme
+                                        .typography
+                                        .bodyLarge
+                            )
+                        }
                     }
-                }
             }
         }
+    }
+}
+
+
+@Composable
+private fun QuizResultContent(
+    score: Int,
+    totalQuestions: Int,
+    difficulty: String,
+    resultSaved: Boolean,
+    isEnglish: Boolean,
+    onRestartClick: () -> Unit,
+    onBackClick: () -> Unit
+) {
+
+    val percentage =
+
+        if (totalQuestions == 0) {
+
+            0
+
+        } else {
+
+            (score * 100) /
+                    totalQuestions
+        }
+
+
+    Text(
+
+        text =
+            if (isEnglish)
+                "Quiz Completed!"
+            else
+                "测验完成！",
+
+        style =
+            MaterialTheme
+                .typography
+                .headlineMedium,
+
+        fontWeight =
+            FontWeight.Bold,
+
+        color =
+            MaterialTheme
+                .colorScheme
+                .primary
+    )
+
+
+    Spacer(
+        modifier =
+            Modifier.height(20.dp)
+    )
+
+
+    Text(
+
+        text =
+            if (isEnglish)
+                "Your Score"
+            else
+                "你的得分",
+
+        style =
+            MaterialTheme
+                .typography
+                .titleMedium
+    )
+
+
+    Spacer(
+        modifier =
+            Modifier.height(8.dp)
+    )
+
+
+    Text(
+
+        text =
+            "$score / $totalQuestions",
+
+        style =
+            MaterialTheme
+                .typography
+                .displaySmall,
+
+        fontWeight =
+            FontWeight.Bold,
+
+        color =
+            MaterialTheme
+                .colorScheme
+                .primary
+    )
+
+
+    Spacer(
+        modifier =
+            Modifier.height(8.dp)
+    )
+
+
+    Text(
+
+        text = "$percentage%",
+
+        style =
+            MaterialTheme
+                .typography
+                .headlineSmall
+    )
+
+
+    Spacer(
+        modifier =
+            Modifier.height(14.dp)
+    )
+
+
+    Text(
+
+        text =
+            if (isEnglish)
+                "Difficulty: $difficulty"
+            else
+                "难度：$difficulty"
+    )
+
+
+    if (resultSaved) {
+
+        Spacer(
+            modifier =
+                Modifier.height(12.dp)
+        )
+
+
+        Text(
+
+            text =
+                if (isEnglish)
+                    "Your result has been saved."
+                else
+                    "你的测验成绩已经保存。",
+
+            color =
+                MaterialTheme
+                    .colorScheme
+                    .primary
+        )
+    }
+
+
+    Spacer(
+        modifier =
+            Modifier.height(32.dp)
+    )
+
+
+    OutlinedButton(
+
+        onClick =
+            onRestartClick,
+
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .height(52.dp)
+    ) {
+
+        Icon(
+            imageVector =
+                Icons.Filled.Replay,
+            contentDescription = null
+        )
+
+
+        Text(
+            text =
+                if (isEnglish)
+                    "  Try Again"
+                else
+                    "  再试一次"
+        )
+    }
+
+
+    Spacer(
+        modifier =
+            Modifier.height(12.dp)
+    )
+
+
+    Button(
+
+        onClick =
+            onBackClick,
+
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .height(52.dp)
+    ) {
+
+        Text(
+            text =
+                if (isEnglish)
+                    "Return to Details"
+                else
+                    "返回详情页"
+        )
     }
 }
 

@@ -42,9 +42,16 @@ fun CollectionScreen(
             }
         } else {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                items(items = uiState.savedTrails, key = { it.id }) { trail ->
+
+                items(items = uiState.savedTrails, key = { it.name }) { trail ->
                     val dismissState = rememberSwipeToDismissBoxState(
-                        confirmValueChange = { if (it == SwipeToDismissBoxValue.EndToStart) { viewModel.removeTrail(trail.id); true } else false }
+                        confirmValueChange = {
+                            if (it == SwipeToDismissBoxValue.EndToStart) {
+
+                                viewModel.removeTrailByName(trail.name)
+                                true
+                            } else false
+                        }
                     )
 
                     SwipeToDismissBox(
@@ -56,7 +63,6 @@ fun CollectionScreen(
                             }
                         }
                     ) {
-
                         Card(
                             modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp),
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),

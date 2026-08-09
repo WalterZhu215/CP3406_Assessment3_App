@@ -1,55 +1,59 @@
 package com.example.natureexplorer.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
+import com.example.natureexplorer.data.SavedTrailEntity
+import com.example.natureexplorer.data.TrailRepository
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
-
-data class SavedTrail(val id: String, val name: String, val addedDate: String, val imageUrl: String)
 
 data class CollectionUiState(
-    val savedTrails: List<SavedTrail> = emptyList()
+    val savedTrails: List<SavedTrailEntity> = emptyList()
 )
 
-class CollectionViewModel : ViewModel() {
+
+class CollectionViewModel(private val repository: TrailRepository) : ViewModel() {
 
 
-    private val initialTrails = listOf(
-        SavedTrail("1", "Botanical Garden Trail", "Added 2 days ago", "https://images.unsplash.com/photo-1551632811-561732d1e306?w=400&q=80")
-    )
-
-    private val _uiState = MutableStateFlow(CollectionUiState(savedTrails = initialTrails))
-    val uiState: StateFlow<CollectionUiState> = _uiState.asStateFlow()
-
-    fun removeTrail(trailId: String) {
-        val currentList = _uiState.value.savedTrails
-        _uiState.value = _uiState.value.copy(
-            savedTrails = currentList.filter { it.id != trailId }
+    val uiState: StateFlow<CollectionUiState> = repository.allSavedTrails
+        .map { CollectionUiState(savedTrails = it) }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = CollectionUiState()
         )
-    }
-
 
     fun toggleFavorite(name: String, imageUrl: String) {
-        val currentList = _uiState.value.savedTrails
-        val exists = currentList.any { it.name == name }
+        viewModelScope.launch {
 
-        if (exists) {
-
-            _uiState.value = _uiState.value.copy(
-                savedTrails = currentList.filter { it.name != name }
-            )
-        } else {
-
-            val newTrail = SavedTrail(
-                id = System.currentTimeMillis().toString(),
-                name = name,
-                addedDate = "Added just now",
-                imageUrl = imageUrl
-            )
-            _uiState.value = _uiState.value.copy(
-                savedTrails = listOf(newTrail) + currentList
-            )
+            val exists = uiState.value.savedTrails.any { it.name == name }
+            if (exists) {
+                repository.removeTrailFromFavorites(name)
+            } else {
+                repository.addTrailToFavorites(name, imageUrl)
+            }
         }
+    }
+
+    fun removeTrailByName(name: String) {
+        viewModelScope.launch {
+            repository.removeTrailFromFavorites(name)
+        }
+    }
+}
+
+
+class CollectionViewModelFactory(private val repository: TrailRepository) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(CollectionViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return CollectionViewModel(repository) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
